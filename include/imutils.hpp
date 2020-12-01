@@ -13,6 +13,7 @@
  * @param width The desired width of the output image.
  * @param height The desired height of the output image.
  */
-void resize(const cv::Mat& src, cv::Mat& dst, int width = 0, int height = 0);
+void resize(const cv::Mat& src, cv::Mat& dst, int width = 0,
+            int height = 0) noexcept;
 
 #endif  // IMUTILS_HPP_

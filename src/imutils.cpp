@@ -1,6 +1,6 @@
 #include "imutils.hpp"
 
-void resize(const cv::Mat& src, cv::Mat& dst, int width, int height) {
+void resize(const cv::Mat& src, cv::Mat& dst, int width, int height) noexcept {
   int w = src.cols;
   int h = src.rows;
 
