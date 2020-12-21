@@ -27,16 +27,16 @@ std::vector<cv::RotatedRect> detect_rectangles(const cv::Mat& src) {
 
   // find the rectangle with the largest area
   auto comp = [](const auto& a, const auto& b) {
-    return (a.size.width * a.size.height) < (b.size.width * b.size.height);
+    return a.size.area() < b.size.area();
   };
   auto max_area_rect =
       *std::max_element(rectangles.begin(), rectangles.end(), comp);
 
   // remove rectangles whose area is less than half the area of the largest
   // rectangle
-  double max_area = max_area_rect.size.width * max_area_rect.size.height;
+  double max_area = max_area_rect.size.area();
   auto delete_rectangle = [=](const auto& a) {
-    return (a.size.width * a.size.height) < (max_area / 2);
+    return a.size.area() < (max_area / 2);
   };
   rectangles.erase(
       std::remove_if(rectangles.begin(), rectangles.end(), delete_rectangle),
