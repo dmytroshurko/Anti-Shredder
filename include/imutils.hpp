@@ -2,7 +2,6 @@
 #define IMUTILS_HPP_
 
 #include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
 
 /*
  * @brief Resizes an image using a computed ratio between new and old width (or
