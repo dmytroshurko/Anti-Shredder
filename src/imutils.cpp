@@ -41,8 +41,8 @@ void RotateWithoutCropping(const cv::Mat& src, cv::Mat& dst,
   int nh = static_cast<int>((h * cos) + (w * sin));
 
   // adjust the rotation matrix to take into account translation
-  M.at<double>(0, 2) += (nw / 2.0) - cx;
-  M.at<double>(1, 2) += (nh / 2.0) - cy;
+  M.at<double>(0, 2) += (nw / 2) - cx;
+  M.at<double>(1, 2) += (nh / 2) - cy;
 
   cv::warpAffine(src, dst, M, cv::Size(nw, nh));
 }
