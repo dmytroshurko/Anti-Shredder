@@ -25,4 +25,13 @@ void Resize(const cv::Mat& src, cv::Mat& dst, int width = 0,
 void RotateWithoutCropping(const cv::Mat& src, cv::Mat& dst,
                            double angle) noexcept;
 
+/*
+ * @brief Crops the center of the image.
+ *
+ * @param src The input image.
+ * @param dst The output image.
+ * @param dsize The dimensions (width, height) to be cropped from the center.
+ */
+void CropCenter(const cv::Mat& src, cv::Mat& dst, cv::Size dsize);
+
 #endif  // IMUTILS_HPP_

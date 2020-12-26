@@ -1,6 +1,7 @@
 #include "imutils.hpp"
 
 #include <opencv2/imgproc.hpp>
+#include <stdexcept>
 
 void Resize(const cv::Mat& src, cv::Mat& dst, int width, int height) noexcept {
   int w = src.cols;
@@ -45,4 +46,19 @@ void RotateWithoutCropping(const cv::Mat& src, cv::Mat& dst,
   M.at<double>(1, 2) += (nh / 2) - cy;
 
   cv::warpAffine(src, dst, M, cv::Size(nw, nh));
+}
+
+void CropCenter(const cv::Mat& src, cv::Mat& dst, cv::Size dsize) {
+  int crop_w = dsize.width;
+  int crop_h = dsize.height;
+
+  if (src.cols < crop_w || src.rows < crop_h) {
+    throw std::out_of_range{"CropCenter"};
+  }
+
+  int offset_w = (src.cols - crop_w) / 2;
+  int offset_h = (src.rows - crop_h) / 2;
+  cv::Rect roi(offset_w, offset_h, crop_w, crop_h);
+
+  dst = src(roi).clone();
 }
