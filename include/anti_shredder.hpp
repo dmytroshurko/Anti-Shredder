@@ -24,4 +24,15 @@ std::vector<cv::Mat> CropRectangles(
     const cv::Mat& src, const std::vector<cv::RotatedRect>& rectangles,
     int approx_iterations = 1);
 
+/*
+ * @brief Calculates the histogram of the part (left or right side) of the
+ * image.
+ *
+ * @param src The input image.
+ * @param side_width The width of the side.
+ * @param side The label of the side ('l' - left side, 'r' - right side).
+ * @return A calculated histogram.
+ */
+cv::Mat CalculateSideHist(const cv::Mat& src, int side_width, char side);
+
 #endif  // ANTI_SHREDDER_HPP_

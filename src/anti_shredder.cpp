@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <opencv2/imgproc.hpp>
+#include <stdexcept>
 #include <utility>
 
 #include "imutils.hpp"
@@ -107,4 +108,44 @@ std::vector<cv::Mat> CropRectangles(
   }
 
   return rect_images;
+}
+
+cv::Mat CalculateSideHist(const cv::Mat& src, int side_width, char side) {
+  if (side_width <= 0 || side_width >= src.cols) {
+    throw std::out_of_range{"CalculateSideHist"};
+  }
+
+  if (side_width <= 0 || (side != 'l' && side != 'r')) {
+    throw std::invalid_argument{"CalculateSideHist"};
+  }
+
+  cv::Mat hsv_side;
+  if (side == 'l') {
+    cv::cvtColor(src(cv::Range::all(), cv::Range(0, side_width)), hsv_side,
+                 cv::COLOR_BGR2HSV);
+  } else {
+    int w = src.cols;
+    cv::cvtColor(src(cv::Range::all(), cv::Range(w - side_width, w)), hsv_side,
+                 cv::COLOR_BGR2HSV);
+  }
+
+  int h_bins = 50;
+  int s_bins = 60;
+  int hist_size[] = {h_bins, s_bins};
+
+  // hue varies from 0 to 179, saturation from 0 to 255
+  float h_ranges[] = {0, 180};
+  float s_ranges[] = {0, 256};
+
+  const float* ranges[] = {h_ranges, s_ranges};
+
+  // use the 0-th and 1-st channels
+  int channels[] = {0, 1};
+
+  cv::Mat hist_side;
+  cv::calcHist(&hsv_side, 1, channels, cv::Mat(), hist_side, 2, hist_size,
+               ranges);
+  cv::normalize(hist_side, hist_side, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+
+  return hist_side;
 }
