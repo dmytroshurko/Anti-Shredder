@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <opencv2/imgproc.hpp>
 #include <stdexcept>
-#include <utility>
 
 #include "imutils.hpp"
 
@@ -148,4 +147,98 @@ cv::Mat CalculateSideHist(const cv::Mat& src, int side_width, char side) {
   cv::normalize(hist_side, hist_side, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
 
   return hist_side;
+}
+
+std::pair<double, std::string> CompareHistograms(
+    const std::pair<cv::Mat, cv::Mat>& a_hist,
+    const std::pair<cv::Mat, cv::Mat>& b_hist) {
+  double best_metric = 0.0;
+  std::string best_sides{""};
+
+  double metric = 0;
+  metric = cv::compareHist(a_hist.first, b_hist.first, cv::HISTCMP_CORREL);
+  if (metric > best_metric) {
+    best_metric = metric;
+    best_sides = "ll";
+  }
+
+  metric = cv::compareHist(a_hist.first, b_hist.second, cv::HISTCMP_CORREL);
+  if (metric > best_metric) {
+    best_metric = metric;
+    best_sides = "lr";
+  }
+
+  metric = cv::compareHist(a_hist.second, b_hist.first, cv::HISTCMP_CORREL);
+  if (metric > best_metric) {
+    best_metric = metric;
+    best_sides = "rl";
+  }
+
+  metric = cv::compareHist(a_hist.second, b_hist.second, cv::HISTCMP_CORREL);
+  if (metric > best_metric) {
+    best_metric = metric;
+    best_sides = "rr";
+  }
+
+  return std::make_pair(best_metric, best_sides);
+}
+
+cv::Mat CombineImageParts(std::vector<cv::Mat> image_parts, int side_width) {
+  int max_img_h = 0;
+  std::vector<std::pair<cv::Mat, cv::Mat>> histograms;
+  for (const auto& img : image_parts) {
+    max_img_h = std::max(max_img_h, img.rows);
+    cv::Mat hist_l = CalculateSideHist(img, side_width, 'l');
+    cv::Mat hist_r = CalculateSideHist(img, side_width, 'r');
+    histograms.emplace_back(std::make_pair(hist_l, hist_r));
+  }
+
+  // resize images
+  for (auto& img : image_parts) {
+    Resize(img, img, 0, max_img_h);
+  }
+
+  while (image_parts.size() > 1) {
+    cv::Mat img_a = image_parts.back();
+    auto a_hist = histograms.back();
+    image_parts.pop_back();
+    histograms.pop_back();
+
+    size_t best_match_idx = 0;
+    double best_metric = 0.0;
+    std::string best_sides{""};
+
+    for (size_t i = 0; i < histograms.size(); ++i) {
+      const auto& b_hist = histograms[i];
+
+      auto [metric, sides] = CompareHistograms(a_hist, b_hist);
+      if (metric > best_metric) {
+        best_match_idx = i;
+        best_metric = metric;
+        best_sides = sides;
+      }
+    }
+
+    cv::Mat img_b = image_parts[best_match_idx];
+    image_parts.erase(image_parts.begin() + best_match_idx);
+    histograms.erase(histograms.begin() + best_match_idx);
+
+    if (best_sides[0] == 'l') {
+      cv::rotate(img_a, img_a, cv::ROTATE_180);
+    }
+    if (best_sides[1] == 'r') {
+      cv::rotate(img_b, img_b, cv::ROTATE_180);
+    }
+
+    cv::Mat img_new;
+    cv::hconcat(img_a, img_b, img_new);
+
+    cv::Mat hist_l = CalculateSideHist(img_new, side_width, 'l');
+    cv::Mat hist_r = CalculateSideHist(img_new, side_width, 'r');
+
+    image_parts.emplace_back(img_new);
+    histograms.emplace_back(std::make_pair(hist_l, hist_r));
+  }
+
+  return image_parts[0];
 }
